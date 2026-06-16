@@ -3,6 +3,10 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+// Pull the static configuration array completely outside the component render cycle
+// This prevents Turbopack from misinterpreting the inline type casting syntax as a JSX block
+const SYSTEM_ROLES = ['artist', 'client', 'manager'] as const;
+
 export default function SignupPage() {
   const router = useRouter();
   const [role, setRole] = useState<'artist' | 'client' | 'manager'>('artist');
@@ -111,7 +115,7 @@ export default function SignupPage() {
 
         {/* THREE-WAY ROLE SWITCH SELECTOR BOX */}
         <div className="grid grid-cols-3 p-1 bg-[#0b0f19] rounded-2xl border border-slate-800/60 mb-6 gap-1">
-          {(['artist', 'client', 'manager'] as const).map((r) => (
+          {SYSTEM_ROLES.map((r) => (
             <button
               key={r} 
               type="button" 
