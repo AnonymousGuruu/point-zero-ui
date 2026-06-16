@@ -113,7 +113,9 @@ export default function SignupPage() {
         <div className="grid grid-cols-3 p-1 bg-[#0b0f19] rounded-2xl border border-slate-800/60 mb-6 gap-1">
           {(['artist', 'client', 'manager'] as const).map((r) => (
             <button
-              key={r} type="button" onClick={() => { setRole(r); setError(null); }}
+              key={r} 
+              type="button" 
+              onClick={() => { setRole(r); setError(null); }}
               className={`py-2 text-[11px] font-bold rounded-xl uppercase tracking-wider transition-all duration-200 ${
                 role === r 
                   ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-md' 
