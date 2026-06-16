@@ -117,10 +117,15 @@ export default function ArtistDashboard() {
 
     // Custom data channel mapping listener frame
     socket.on('message', (receivedMsg: ChatMessage) => {
-      receivedMsg.isMe = receivedMsg.senderName === artistName;
       setMessages((prev) => {
         if (prev.some(m => m.id === receivedMsg.id)) return prev;
-        return [...prev, receivedMsg];
+        
+        // Dynamically compute identity flag inside state setter to safeguard against closures
+        const updatedMsg = {
+          ...receivedMsg,
+          isMe: receivedMsg.senderName === artistName
+        };
+        return [...prev, updatedMsg];
       });
     });
 
@@ -134,7 +139,7 @@ export default function ArtistDashboard() {
       setSocketConnected(false);
     });
 
-    // FIXED CLEANUP BLOCK: Safely strips hooks on teardown
+    // CLEANUP BLOCK: Safely strips hooks on teardown
     return () => {
       if (socketRef.current) {
         console.log('[WebSocket] Dismantling component subscription engines...');
@@ -146,7 +151,7 @@ export default function ArtistDashboard() {
         socketRef.current = null;
       }
     };
-  }, [artistName, backendServerUrl]);
+  }, [backendServerUrl]); // 👈 artistName removed here to stop cycle loops
 
   // Smooth scroll pinning mechanism for incoming message structures
   useEffect(() => {
@@ -306,7 +311,7 @@ export default function ArtistDashboard() {
     }, 1500);
   };
 
-  // FIXED AND UPDATED: Execution dispatch framework handling messaging outbound payloads cleanly
+  // Execution dispatch framework handling messaging outbound payloads cleanly
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!typedMessage.trim()) return;
@@ -679,8 +684,8 @@ export default function ArtistDashboard() {
               />
               <button
                 type="submit"
-                disabled={!typedMessage.trim()}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white disabled:text-slate-600 font-bold text-xs rounded-xl uppercase tracking-wider transition-all shadow-md active:scale-95 flex-shrink-0"
+                disabled={!typedMessage.trim() || !socketConnected}
+                className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 disabled:opacity-40 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all"
               >
                 Send
               </button>
