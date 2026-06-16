@@ -34,9 +34,12 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    
+    console.log("🚀 Form submission intercepted! Current Payload:", { name, email, role });
 
     // Enforce basic programmatic input validation for standard fields safely on mobile
     if (!name.trim() || !email.trim() || !password.trim()) {
+      console.log("❌ Validation failed: One of the core fields is completely empty.");
       setError('Please fill out all required fields.');
       return;
     }
@@ -44,6 +47,7 @@ export default function SignupPage() {
     // SYSTEM CHECK: Validate master admin authorization token key string before saving
     if (role === 'manager') {
       if (!adminCode || adminCode !== 'PZ-2026-NBO-ALPHA') {
+        console.log("❌ Admin validation failed: Incorrect key string.");
         setError("Hold up, that admin pass-key doesn't look right.");
         return;
       }
@@ -62,9 +66,9 @@ export default function SignupPage() {
     };
 
     try {
-      // Resolve deployment route mapping context automatically
       // Force the app to point directly to your live production Render backend
-const BASE_SERVER_URL = "https://point-zero-backend.onrender.com";
+      const BASE_SERVER_URL = "https://point-zero-backend.onrender.com";
+      console.log(`📡 Dispatching payload directly to backend: ${BASE_SERVER_URL}/api/auth/register`);
       
       const response = await fetch(`${BASE_SERVER_URL}/api/auth/register`, {
         method: "POST",
@@ -75,6 +79,7 @@ const BASE_SERVER_URL = "https://point-zero-backend.onrender.com";
       });
 
       const data = await response.json();
+      console.log("📥 Server response received:", data);
 
       // Catch and expose specific errors returned directly from your Express backend logic
       if (!response.ok) {
