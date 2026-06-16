@@ -63,7 +63,8 @@ export default function SignupPage() {
 
     try {
       // Resolve deployment route mapping context automatically
-      const BASE_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+      // Force the app to point directly to your live production Render backend
+const BASE_SERVER_URL = "https://point-zero-backend.onrender.com";
       
       const response = await fetch(`${BASE_SERVER_URL}/api/auth/register`, {
         method: "POST",
