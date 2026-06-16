@@ -31,10 +31,16 @@ export default function SignupPage() {
     e.preventDefault();
     setError(null);
 
+    // Enforce basic programmatic input validation for standard fields safely on mobile
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setError('Please fill out all required authentication fields.');
+      return;
+    }
+
     // SYSTEM CHECK: Validate master admin authorization token key string before saving
     if (role === 'manager') {
-      if (adminCode !== 'PZ-2026-NBO-ALPHA') {
-        setError('Hold up, that admin pass-key doesn\'t look right.');
+      if (!adminCode || adminCode !== 'PZ-2026-NBO-ALPHA') {
+        setError("Hold up, that admin pass-key doesn't look right.");
         return;
       }
     }
@@ -97,7 +103,7 @@ export default function SignupPage() {
 
         {/* THREE-WAY ROLE SWITCH SELECTOR BOX */}
         <div className="grid grid-cols-3 p-1 bg-[#0b0f19] rounded-2xl border border-slate-800/60 mb-6 gap-1">
-          {(['artist', 'client', 'manager'] as const).map((r) => (
+          { AntialiasButtons: (['artist', 'client', 'manager'] as const).map((r) => (
             <button
               key={r} type="button" onClick={() => { setRole(r); setError(null); }}
               className={`py-2 text-[11px] font-bold rounded-xl uppercase tracking-wider transition-all duration-200 ${
@@ -111,78 +117,82 @@ export default function SignupPage() {
           ))}
         </div>
 
-        <form onSubmit={handleSignup} className="space-y-5">
+        {/* Added noValidate flag to override phantom mobile validation hangs */}
+        <form onSubmit={handleSignup} noValidate className="space-y-5">
           {/* USER ACCOUNT NAME */}
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">Stage Name / Brand</label>
-            <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name / Brand" className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors" />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name / Brand" className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors" />
           </div>
 
           {/* D_CORE TALENT CATEGORY DROPDOWN MENU */}
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">Talent Core Category</label>
-            <div className="relative">
-              <select
-                value={artistCategory}
-                onChange={(e) => setArtistCategory(e.target.value)}
-                className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 appearance-none cursor-pointer focus:outline-none focus:border-violet-500 transition-colors"
-              >
-                <option value="Vocalist">Vocalist</option>
-                <option value="Dancer">Dancer</option>
-                <option value="Model">Model</option>
-                <option value="Cinematographer">Cinematographer</option>
-                <option value="Producer">Producer</option>
-                <option value="Photographer">Photographer</option>
-              </select>
-              {/* Explicit Dropdown Arrow Vector Glyph Element Graphic Overlay */}
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-violet-400">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                </svg>
+          {role === 'artist' && (
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">Talent Core Category</label>
+              <div className="relative">
+                <select
+                  value={artistCategory}
+                  onChange={(e) => setArtistCategory(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 appearance-none cursor-pointer focus:outline-none focus:border-violet-500 transition-colors"
+                >
+                  <option value="Vocalist">Vocalist</option>
+                  <option value="Dancer">Dancer</option>
+                  <option value="Model">Model</option>
+                  <option value="Cinematographer">Cinematographer</option>
+                  <option value="Producer">Producer</option>
+                  <option value="Photographer">Photographer</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-violet-400">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                  </svg>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* METRIC PROFILE METADATA PLACEMENTS FIELDS */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">City Location</label>
-              <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Nairobi" className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 focus:outline-none focus:border-violet-500 transition-colors" />
+          {role === 'artist' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">City Location</label>
+                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Nairobi" className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 focus:outline-none focus:border-violet-500 transition-colors" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">Filter Tags</label>
+                <input type="text" value={customTags} onChange={(e) => setCustomTags(e.target.value)} placeholder="Afro-Jazz, Live" className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 focus:outline-none focus:border-violet-500 transition-colors" />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">Filter Tags</label>
-              <input type="text" value={customTags} onChange={(e) => setCustomTags(e.target.value)} placeholder="Afro-Jazz, Live" className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 focus:outline-none focus:border-violet-500 transition-colors" />
-            </div>
-          </div>
+          )}
 
           {/* PORTFOLIO IMAGE COMPONENT ATTACHMENT BOX */}
-          <div className="p-4 bg-[#0b0f19] border border-slate-800 rounded-2xl">
+          <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">Profile Picture / Avatar</label>
-            <div className="flex items-center gap-4">
-              <input type="file" accept="image/*" onChange={handleFileChange} className="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#131a2c] file:text-violet-400 hover:file:bg-slate-800 cursor-pointer transition-colors" />
-              {avatarBase64 && <img src={avatarBase64} alt="Preview" className="h-10 w-10 rounded-xl object-cover border border-slate-700" />}
+            <div className="p-4 bg-[#0b0f19] border border-slate-800 rounded-2xl flex items-center gap-4">
+              <input type="file" accept="image/*" onChange={handleFileChange} className="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#131a2c] file:text-violet-400 hover:file:bg-slate-800 cursor-pointer transition-colors w-full" />
+              {avatarBase64 && <img src={avatarBase64} alt="Preview" className="h-10 w-10 rounded-xl object-cover border border-slate-700 shrink-0" />}
             </div>
           </div>
 
-          {/* SYSTEM SECURITY LEVEL KEY TOKEN */}
+          {/* SYSTEM SECURITY LEVEL KEY TOKEN - Notice: 'required' removed for programmatic validation handle */}
           {role === 'manager' && (
             <div className="p-4 bg-[#0b0f19] border border-fuchsia-500/20 rounded-2xl">
               <label className="block text-xs font-bold text-fuchsia-400 uppercase tracking-widest mb-2">Admin Security Key Token</label>
-              <input type="password" required value={adminCode} onChange={(e) => setAdminCode(e.target.value)} placeholder="Enter system administrative key..." className="w-full px-4 py-3.5 bg-[#131a2c] border border-slate-800 rounded-2xl text-sm font-mono text-fuchsia-400 placeholder-slate-700 focus:outline-none focus:border-fuchsia-500 transition-colors" />
+              <input type="password" value={adminCode} onChange={(e) => setAdminCode(e.target.value)} placeholder="Enter system administrative key..." className="w-full px-4 py-3.5 bg-[#131a2c] border border-slate-800 rounded-2xl text-sm font-mono text-fuchsia-400 placeholder-slate-700 focus:outline-none focus:border-fuchsia-500 transition-colors" />
             </div>
           )}
 
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">Email Address</label>
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="developer@pointzero.io" className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="developer@pointzero.io" className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors" />
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 pl-1">Secure Password</label>
-            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-4 py-3.5 bg-[#0b0f19] border border-slate-800 rounded-2xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors" />
           </div>
 
-          <button type="submit" className="w-full py-4 mt-2 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 hover:opacity-95 text-white font-bold rounded-2xl transition-all shadow-lg shadow-purple-500/10 text-xs uppercase tracking-widest">
+          <button type="submit" className="w-full py-4 mt-2 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 hover:opacity-95 text-white font-bold rounded-2xl transition-all shadow-lg shadow-purple-500/10 text-xs uppercase tracking-widest active:scale-[0.98]">
             Register {role} Profile
           </button>
         </form>
