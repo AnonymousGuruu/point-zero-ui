@@ -1,65 +1,90 @@
-import Image from "next/image";
+import React from 'react';
 
-export default function Home() {
+export default function PublicHomepage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col justify-between">
+      
+      {/* GLOBAL NAVBAR */}
+      <nav className="border-b border-slate-900 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-lg">
+            Ω
+          </div>
+          <span className="text-xl font-bold tracking-tight text-white">Point Zero</span>
+        </div>
+        
+        <div className="flex items-center gap-6 text-sm font-medium text-slate-400">
+          <a href="#" className="hover:text-emerald-400 transition-colors">Explore Artists</a>
+          <a href="#" className="hover:text-emerald-400 transition-colors">Portfolios</a>
+          <a href="#" className="hover:text-emerald-400 transition-colors">Features</a>
+        </div>
+
+        <div>
+          <a href="/login" className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-sm font-semibold rounded-xl transition-all">
+            Sign In
+          </a>
+        </div>
+      </nav>
+
+      {/* HERO SECTION */}
+      <header className="max-w-5xl mx-auto px-6 pt-20 pb-16 text-center">
+        <span className="px-3 py-1 text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full uppercase tracking-wider">
+          Next-Gen Talent Management
+        </span>
+        <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mt-6 max-w-3xl mx-auto leading-tight">
+          Book Premium Artists. <br />
+          <span className="bg-gradient-to-r from-emerald-400 to-teal-400 text-transparent bg-clip-text">
+            Manage Media Effortlessly.
+          </span>
+        </h1>
+        <p className="text-slate-400 text-lg md:text-xl mt-6 max-w-2xl mx-auto leading-relaxed">
+          The all-in-one portal for creative talent to host high-fidelity portfolios, upload video showreels, and securely secure client bookings.
+        </p>
+        
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="/artists" className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl transition-all shadow-xl shadow-emerald-500/10 text-center">
+            Browse Artists
+          </a>
+          <a href="/login" className="w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-semibold rounded-xl transition-all text-center">
+            Login
+          </a>
+        </div>
+      </header>
+
+      {/* FEATURE/PERFORMANCE HIGHLIGHT CARDS */}
+      <section className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+        
+        <div className="bg-slate-900/40 border border-slate-900 p-8 rounded-2xl">
+          <div className="text-3xl mb-4">📸</div>
+          <h3 className="text-xl font-bold text-white">Media Portfolios</h3>
+          <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+            Artists can upload ultra-clean photo galleries and stream production-ready video showreels directly from their personalized dashboard profile.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="bg-slate-900/40 border border-slate-900 p-8 rounded-2xl">
+          <div className="text-3xl mb-4">🗓️</div>
+          <h3 className="text-xl font-bold text-white">Seamless Bookings</h3>
+          <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+            Direct client-to-artist availability calendars, automated contracting pipelines, and booking confirmation counters that track payouts.
+          </p>
         </div>
-      </main>
+
+        <div className="bg-slate-900/40 border border-slate-900 p-8 rounded-2xl">
+          <div className="text-3xl mb-4">⚡</div>
+          <h3 className="text-xl font-bold text-white">Real-Time Console</h3>
+          <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+            A state-driven interactive operational interface built for managers and creators to oversee uploads, analytics, and active transactions live.
+          </p>
+        </div>
+
+      </section>
+
+      {/* REASSURING FOOTER */}
+      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-600 w-full mt-12">
+        &copy; 2026 Point Zero Platform Node. Powered by Webpack Local Engine. All rights reserved.
+      </footer>
+
     </div>
   );
 }
