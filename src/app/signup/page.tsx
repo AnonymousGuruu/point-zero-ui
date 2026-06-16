@@ -27,13 +27,13 @@ export default function SignupPage() {
     }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     // Enforce basic programmatic input validation for standard fields safely on mobile
     if (!name.trim() || !email.trim() || !password.trim()) {
-      setError('Please fill out all required authentication fields.');
+      setError('Please fill out all required fields.');
       return;
     }
 
@@ -45,41 +45,49 @@ export default function SignupPage() {
       }
     }
 
-    const userAccount = {
-      name,
+    // Assemble unified global payload object to transmit to your backend schema endpoints
+    const signupPayload = {
+      name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
       role,
-      avatar: avatarBase64
+      avatar: avatarBase64,
+      artistCategory,
+      location: location.trim(),
+      customTags: customTags.trim()
     };
 
-    // Save basic auth credential payload block
-    localStorage.setItem(`pz_user_${userAccount.email}`, JSON.stringify(userAccount));
-    sessionStorage.setItem('pz_last_registered_email', userAccount.email);
+    try {
+      // Resolve deployment route mapping context automatically
+      const BASE_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+      
+      const response = await fetch(`${BASE_SERVER_URL}/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(signupPayload),
+      });
 
-    // Provisions structured node row directly inside directory pool database matrices
-    if (role === 'artist') {
-      const processedTags = customTags
-        ? customTags.split(',').map(t => t.trim()).filter(t => t.length > 0)
-        : [artistCategory, 'Creative'];
+      const data = await response.json();
 
-      const newArtistNode = {
-        id: `ART-${Math.floor(100 + Math.random() * 900)}`,
-        name,
-        role: artistCategory, // Matches filters safely on the index layout page
-        tags: processedTags,
-        image: avatarBase64 || '✨',
-        location: location || 'Nairobi'
-      };
+      // Catch and expose specific errors returned directly from your Express backend logic
+      if (!response.ok) {
+        throw new Error(data.error || "An error occurred during account routing.");
+      }
 
-      const activeProfilesStr = localStorage.getItem('pz_registered_artists');
-      const dynamicList = activeProfilesStr ? JSON.parse(activeProfilesStr) : [];
-      dynamicList.unshift(newArtistNode);
-      localStorage.setItem('pz_registered_artists', JSON.stringify(dynamicList));
+      // Keep trace of last registered address to cleanly fill inputs on the login page
+      sessionStorage.setItem('pz_last_registered_email', signupPayload.email);
 
-      router.push('/artists');
-    } else {
-      router.push('/login');
+      // Clean routing shifts upon verified successful account commitment
+      if (role === 'artist') {
+        router.push('/artists');
+      } else {
+        router.push('/login');
+      }
+    } catch (err: any) {
+      console.error("🚨 Signup Submission Error Stack:", err);
+      setError(err.message || "Failed to establish global link. Make sure your server is online.");
     }
   };
 
@@ -103,7 +111,7 @@ export default function SignupPage() {
 
         {/* THREE-WAY ROLE SWITCH SELECTOR BOX */}
         <div className="grid grid-cols-3 p-1 bg-[#0b0f19] rounded-2xl border border-slate-800/60 mb-6 gap-1">
-          { AntialiasButtons: (['artist', 'client', 'manager'] as const).map((r) => (
+          {(['artist', 'client', 'manager'] as const).map((r) => (
             <button
               key={r} type="button" onClick={() => { setRole(r); setError(null); }}
               className={`py-2 text-[11px] font-bold rounded-xl uppercase tracking-wider transition-all duration-200 ${
@@ -174,7 +182,7 @@ export default function SignupPage() {
             </div>
           </div>
 
-          {/* SYSTEM SECURITY LEVEL KEY TOKEN - Notice: 'required' removed for programmatic validation handle */}
+          {/* SYSTEM SECURITY LEVEL KEY TOKEN */}
           {role === 'manager' && (
             <div className="p-4 bg-[#0b0f19] border border-fuchsia-500/20 rounded-2xl">
               <label className="block text-xs font-bold text-fuchsia-400 uppercase tracking-widest mb-2">Admin Security Key Token</label>
