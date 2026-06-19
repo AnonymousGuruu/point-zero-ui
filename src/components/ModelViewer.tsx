@@ -6,15 +6,18 @@ import { OrbitControls, useGLTF, useAnimations, Center } from '@react-three/drei
 import * as THREE from 'three';
 
 function AnimatedModel() {
-  // CHANGED: Pointing directly to the asset in your public root directory
+  // Pointing directly to the asset in your public root directory
   const { scene, animations } = useGLTF('/animation.gltf');
   const group = useRef<THREE.Group>(null);
   const { actions, names } = useAnimations(animations, group);
 
   useEffect(() => {
-    // If the model contains animations, instantly target and fire the first animation track loop
-    if (names.length > 0 && actions[names[0]]) {
-      actions[names[0]]?.fadeIn(0.5).play();
+    // If the model contains animations, instantly target and fire the first animation track loop safely
+    if (names && names.length > 0 && actions) {
+      const activeAction = actions[names[0]];
+      if (activeAction) {
+        activeAction.fadeIn(0.5).play();
+      }
     }
   }, [actions, names]);
 
@@ -59,5 +62,5 @@ export default function ModelViewer() {
   );
 }
 
-// CHANGED: Pre-cache asset using the updated root path string
+// Pre-cache asset using the updated root path string
 useGLTF.preload('/animation.gltf');
