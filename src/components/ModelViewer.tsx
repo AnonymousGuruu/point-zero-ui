@@ -15,13 +15,13 @@ function CharacterModel() {
     }
   }, [actions]);
 
-  return <primitive object={scene} scale={0.35} position={[0, -2, 0]} />;
+  // Dropped scale from 0.35 to 0.25 to scale it down, and raised position slightly to ground it
+  return <primitive object={scene} scale={0.25} position={[0, -1.6, 0]} />;
 }
 
 export default function ModelViewer() {
   const [mounted, setMounted] = useState(false);
   
-  // Strict client-side mounting to prevent server mismatches
   useEffect(() => setMounted(true), []);
 
   if (!mounted) {
