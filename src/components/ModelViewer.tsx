@@ -1,66 +1,50 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF, useAnimations, Center } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { Suspense, useEffect, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, useGLTF, useAnimations } from '@react-three/drei';
 
-function AnimatedModel() {
-  // Pointing directly to the asset in your public root directory
+function CharacterModel() {
   const { scene, animations } = useGLTF('/animation.gltf');
-  const group = useRef<THREE.Group>(null);
-  const { actions, names } = useAnimations(animations, group);
+  const { actions } = useAnimations(animations, scene);
 
   useEffect(() => {
-    // If the model contains animations, instantly target and fire the first animation track loop safely
-    if (names && names.length > 0 && actions) {
-      const activeAction = actions[names[0]];
-      if (activeAction) {
-        activeAction.fadeIn(0.5).play();
-      }
+    if (actions && Object.keys(actions).length > 0) {
+      const firstAction = Object.keys(actions)[0];
+      actions[firstAction]?.play();
     }
-  }, [actions, names]);
+  }, [actions]);
 
-  // Subtle continuous floating rotation backup animation matrix loop
-  useFrame((state) => {
-    if (group.current) {
-      group.current.rotation.y = state.clock.getElapsedTime() * 0.15;
-    }
-  });
-
-  return (
-    <group ref={group} dispose={null}>
-      <primitive object={scene} />
-    </group>
-  );
+  return <primitive object={scene} scale={0.35} position={[0, -2, 0]} />;
 }
 
 export default function ModelViewer() {
+  const [mounted, setMounted] = useState(false);
+  
+  // Strict client-side mounting to prevent server mismatches
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return (
+      <div className="w-full h-full min-h-[350px] bg-slate-950/40 flex items-center justify-center text-slate-500 font-mono text-xs">
+        Connecting Core Matrix...
+      </div>
+    );
+  }
+
   return (
-    <Canvas
-      camera={{ position: [0, 2, 5], fov: 45 }}
-      gl={{ antialias: true, preserveDrawingBuffer: true }}
-    >
-      {/* Dynamic Lighting System setup */}
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[5, 10, 5]} intensity={1.5} castShadow />
-      <pointLight position={[-5, -5, -5]} intensity={0.5} />
-      <spotLight position={[0, 8, 0]} intensity={1} angle={0.3} penumbra={1} />
+    <div className="w-full h-full min-h-[350px] bg-slate-950/40">
+      <Canvas camera={{ position: [0, 2, 6], fov: 40 }}>
+        <ambientLight intensity={0.8} />
+        <directionalLight position={[5, 10, 5]} intensity={1.5} />
+        <pointLight position={[0, 4, 2]} intensity={0.5} color="#10b981" />
+        
+        <Suspense fallback={null}>
+          <CharacterModel />
+        </Suspense>
 
-      <Center>
-        <AnimatedModel />
-      </Center>
-
-      {/* Enable pan/zoom interactions on the hero banner context cleanly */}
-      <OrbitControls 
-        enableZoom={false} 
-        enablePan={false} 
-        minPolarAngle={Math.PI / 3} 
-        maxPolarAngle={Math.PI / 1.8} 
-      />
-    </Canvas>
+        <OrbitControls enableZoom={true} maxPolarAngle={Math.PI / 2} />
+      </Canvas>
+    </div>
   );
 }
-
-// Pre-cache asset using the updated root path string
-useGLTF.preload('/animation.gltf');

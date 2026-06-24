@@ -4,11 +4,12 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 
 // Dynamically import the 3D Canvas component to bypass server-side rendering errors safely
-const ModelViewer = dynamic(() => import('@/components/ModelViewer'), { 
+// Isolate the canvas container using a clean dynamic client bridge
+const ModelViewer = dynamic(() => import('../components/ModelViewer'), { 
   ssr: false,
   loading: () => (
-    <div className="w-full h-[350px] md:h-[450px] bg-slate-900/10 border border-slate-900 rounded-2xl flex items-center justify-center text-xs font-mono text-slate-500 animate-pulse">
-      Initializing 3D Pipeline Matrix...
+    <div className="w-full h-[350px] md:h-[450px] bg-slate-900/10 border border-slate-900/20 rounded flex items-center justify-center text-slate-500 font-mono text-xs">
+      Initialising 3D Workspace Matrix...
     </div>
   )
 });
