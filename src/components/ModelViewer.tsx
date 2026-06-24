@@ -18,7 +18,7 @@ function CharacterModel() {
 
   // 2. We removed the manual position array entirely. 
   // Let the wrapper handle the math!
-  return <primitive object={scene} scale={0.25} />;
+  return <primitive object={scene} scale={0.16} />;
 }
 
 export default function ModelViewer() {
@@ -36,7 +36,7 @@ export default function ModelViewer() {
 
   return (
     <div className="w-full h-full min-h-[350px] bg-slate-950/40">
-      <Canvas camera={{ position: [0, 2, 6], fov: 40 }}>
+      <Canvas camera={{ position: [0, 1.5, 8], fov: 45 }}>
         <ambientLight intensity={0.8} />
         <directionalLight position={[5, 10, 5]} intensity={1.5} />
         <pointLight position={[0, 4, 2]} intensity={0.5} color="#10b981" />
