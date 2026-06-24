@@ -2,7 +2,8 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF, useAnimations } from '@react-three/drei';
+// 1. We imported Center from drei
+import { OrbitControls, useGLTF, useAnimations, Center } from '@react-three/drei';
 
 function CharacterModel() {
   const { scene, animations } = useGLTF('/animation.gltf');
@@ -15,8 +16,9 @@ function CharacterModel() {
     }
   }, [actions]);
 
-  // Dropped scale from 0.35 to 0.25 to scale it down, and raised position slightly to ground it
-  return <primitive object={scene} scale={0.25} position={[0, -1.6, 0]} />;
+  // 2. We removed the manual position array entirely. 
+  // Let the wrapper handle the math!
+  return <primitive object={scene} scale={0.25} />;
 }
 
 export default function ModelViewer() {
@@ -40,7 +42,11 @@ export default function ModelViewer() {
         <pointLight position={[0, 4, 2]} intensity={0.5} color="#10b981" />
         
         <Suspense fallback={null}>
-          <CharacterModel />
+          {/* 3. Wrap the character in <Center>. 
+              It forces the model into the exact middle of your canvas frame. */}
+          <Center position={[0, -0.5, 0]}>
+            <CharacterModel />
+          </Center>
         </Suspense>
 
         <OrbitControls enableZoom={true} maxPolarAngle={Math.PI / 2} />
