@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+// Import Firebase core services
+import { auth, db } from '../../lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function LoginPage() {
   const [role, setRole] = useState<'artist' | 'client' | 'manager'>('artist');
@@ -18,47 +22,62 @@ export default function LoginPage() {
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    const lookupKey = `pz_user_${email.toLowerCase().trim()}`;
-    const localRecord = localStorage.getItem(lookupKey);
+    try {
+      // 1. Authenticate against Firebase Auth to verify credentials
+      const userCredential = await signInWithEmailAndPassword(auth, email.toLowerCase().trim(), password);
+      const user = userCredential.user;
 
-    if (!localRecord) {
-      setErrorMessage('Access Denied: No account registered with this email identity.');
-      return;
-    }
+      // 2. Fetch the user's specific Point Zero profile from the database
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
 
-    const accountData = JSON.parse(localRecord);
+      if (!userDocSnap.exists()) {
+        setErrorMessage('Access Denied: Account exists but profile metadata is missing.');
+        return;
+      }
 
-    if (accountData.password !== password) {
-      setErrorMessage('Access Denied: Invalid security password signature.');
-      return;
-    }
+      const accountData = userDocSnap.data();
 
-    if (accountData.role !== role) {
-      setErrorMessage(`Authentication Error: This profile is registered as an ${accountData.role.toUpperCase()}.`);
-      return;
-    }
+      // 3. Prevent an Artist from logging into the Manager portal, etc.
+      if (accountData.role !== role) {
+        setErrorMessage(`Authentication Error: This profile is registered as an ${accountData.role.toUpperCase()}.`);
+        return;
+      }
 
-    sessionStorage.setItem('pz_active_session', JSON.stringify(accountData));
+      // Temporarily store session info for quick client-side lookup during routing
+      sessionStorage.setItem('pz_active_session', JSON.stringify({ uid: user.uid, ...accountData }));
 
-    // CHECK OUTBOUND INTERCEPT LOOP TARGET TICKET CONTEXT RECORD FOR FORWARD REDIRECT
-    const postAuthRedirect = sessionStorage.getItem('pz_redirect_back_target');
-    if (postAuthRedirect) {
-      sessionStorage.removeItem('pz_redirect_back_target');
-      window.location.href = postAuthRedirect;
-      return;
-    }
+      // CHECK OUTBOUND INTERCEPT LOOP TARGET TICKET CONTEXT RECORD FOR FORWARD REDIRECT
+      const postAuthRedirect = sessionStorage.getItem('pz_redirect_back_target');
+      if (postAuthRedirect) {
+        sessionStorage.removeItem('pz_redirect_back_target');
+        window.location.href = postAuthRedirect;
+        return;
+      }
 
-    // GENERAL DISPATCH OVERVIEW ROUTE SPLITS
-    if (accountData.role === 'artist') {
-      window.location.href = '/dashboard/artist';
-    } else if (accountData.role === 'client') {
-      window.location.href = '/dashboard/client';
-    } else {
-      window.location.href = '/dashboard/manager';
+      // GENERAL DISPATCH OVERVIEW ROUTE SPLITS
+      if (accountData.role === 'artist') {
+        window.location.href = '/dashboard/artist';
+      } else if (accountData.role === 'client') {
+        window.location.href = '/dashboard/client';
+      } else {
+        window.location.href = '/dashboard/manager';
+      }
+
+    } catch (err: any) {
+      console.error("🚨 Firebase Authentication Error:", err);
+      // Map standard Firebase auth errors to clean UI text
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setErrorMessage('Access Denied: Invalid email or password signature.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setErrorMessage('Access locked due to too many failed attempts. Try again later.');
+      } else {
+        setErrorMessage(err.message || 'An error occurred during authentication.');
+      }
     }
   };
 

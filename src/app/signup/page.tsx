@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+// Import Firebase core services
+import { auth, db } from '../../lib/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
-// Pull the static configuration array completely outside the component render cycle
-// This prevents Turbopack from misinterpreting the inline type casting syntax as a JSX block
 const SYSTEM_ROLES = ['artist', 'client', 'manager'] as const;
 
 export default function SignupPage() {
@@ -17,7 +19,6 @@ export default function SignupPage() {
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Core configuration metrics for the dynamic directory alignment mapping
   const [artistCategory, setArtistCategory] = useState('Vocalist');
   const [location, setLocation] = useState('Nairobi');
   const [customTags, setCustomTags] = useState('');
@@ -37,57 +38,41 @@ export default function SignupPage() {
     
     console.log("🚀 Form submission intercepted! Current Payload:", { name, email, role });
 
-    // Enforce basic programmatic input validation for standard fields safely on mobile
     if (!name.trim() || !email.trim() || !password.trim()) {
-      console.log("❌ Validation failed: One of the core fields is completely empty.");
       setError('Please fill out all required fields.');
       return;
     }
 
-    // SYSTEM CHECK: Validate master admin authorization token key string before saving
     if (role === 'manager') {
       if (!adminCode || adminCode !== 'PZ-2026-NBO-ALPHA') {
-        console.log("❌ Admin validation failed: Incorrect key string.");
         setError("Hold up, that admin pass-key doesn't look right.");
         return;
       }
     }
 
-    // Assemble unified global payload object to transmit to your backend schema endpoints
-    const signupPayload = {
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      password,
-      role,
-      avatar: avatarBase64,
-      artistCategory,
-      location: location.trim(),
-      customTags: customTags.trim()
-    };
-
     try {
-      // Force the app to point directly to your live production Render backend
-      const BASE_SERVER_URL = "https://point-zero-backend.onrender.com";
-      console.log(`📡 Dispatching payload directly to backend: ${BASE_SERVER_URL}/api/auth/register`);
+      console.log(`📡 Dispatching payload directly to Firebase Auth & Firestore...`);
       
-      const response = await fetch(`${BASE_SERVER_URL}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(signupPayload),
+      // 1. Create the secure authentication identity in Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, email.toLowerCase().trim(), password);
+      const user = userCredential.user;
+
+      // 2. Save the extended profile data to Firestore Database
+      // Note: We use the user.uid as the document ID to link Auth and Database seamlessly
+      await setDoc(doc(db, 'users', user.uid), {
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        role: role,
+        avatar: avatarBase64, // Stored safely in the database document
+        artistCategory: role === 'artist' ? artistCategory : null,
+        location: role === 'artist' ? location.trim() : null,
+        customTags: role === 'artist' ? customTags.trim() : null,
+        createdAt: new Date().toISOString()
       });
 
-      const data = await response.json();
-      console.log("📥 Server response received:", data);
+      console.log("📥 Server response received: Firebase Account Created");
 
-      // Catch and expose specific errors returned directly from your Express backend logic
-      if (!response.ok) {
-        throw new Error(data.error || "An error occurred during account routing.");
-      }
-
-      // Keep trace of last registered address to cleanly fill inputs on the login page
-      sessionStorage.setItem('pz_last_registered_email', signupPayload.email);
+      sessionStorage.setItem('pz_last_registered_email', email.toLowerCase().trim());
 
       // Clean routing shifts upon verified successful account commitment
       if (role === 'artist') {
@@ -97,7 +82,14 @@ export default function SignupPage() {
       }
     } catch (err: any) {
       console.error("🚨 Signup Submission Error Stack:", err);
-      setError(err.message || "Failed to establish global link. Make sure your server is online.");
+      // Map standard Firebase errors to clean UI alerts
+      if (err.code === 'auth/email-already-in-use') {
+        setError("This email is already registered. Try signing in.");
+      } else if (err.code === 'auth/weak-password') {
+        setError("Your password is too weak. Please use at least 6 characters.");
+      } else {
+        setError(err.message || "Failed to establish global link. Check your connection.");
+      }
     }
   };
 
@@ -137,7 +129,6 @@ export default function SignupPage() {
           ))}
         </div>
 
-        {/* Added noValidate flag to override phantom mobile validation hangs */}
         <form onSubmit={handleSignup} noValidate className="space-y-5">
           {/* USER ACCOUNT NAME */}
           <div>
