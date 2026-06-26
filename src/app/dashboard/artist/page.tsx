@@ -265,7 +265,8 @@ export default function ArtistDashboard() {
         />
       </div>
 
-      <aside className="w-64 bg-slate-900/80 border-r border-slate-800/60 p-6 flex flex-col justify-between hidden md:flex rounded-r-3xl shadow-xl z-20 relative backdrop-blur-md">
+      {/* Desktop Sidebar Navigation */}
+      <aside className="w-64 bg-slate-900/80 border-r border-slate-800/60 p-6 flex-col justify-between hidden md:flex rounded-r-3xl shadow-xl z-20 relative backdrop-blur-md">
         <div>
           <div className="flex flex-col items-center text-center pb-6 mb-6 border-b border-slate-800/50 relative overflow-visible">
             <div 
@@ -338,7 +339,8 @@ export default function ArtistDashboard() {
         </div>
       </aside>
 
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto relative z-10 flex flex-col justify-start">
+      {/* Main Content Area - Added pb-24 for mobile nav spacing */}
+      <main className="flex-1 p-6 pb-24 md:p-10 md:pb-10 overflow-y-auto relative z-10 flex flex-col justify-start">
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="absolute bottom-10 left-1/3 w-72 h-72 bg-pink-500/5 rounded-full blur-[100px] pointer-events-none"></div>
         
@@ -584,6 +586,51 @@ export default function ArtistDashboard() {
           </div>
         )}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950/90 border-t border-slate-800/80 backdrop-blur-xl z-50 px-4 py-3 flex justify-between items-center pb-safe">
+        <button
+          onClick={() => setCurrentView('media')}
+          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+            currentView === 'media' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <span className="text-xl">🖼️</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider">Media</span>
+        </button>
+        <button
+          onClick={() => setCurrentView('bookings')}
+          className={`relative flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+            currentView === 'bookings' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <span className="text-xl">🗓️</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider">Jobs</span>
+          {liveOffers.length > 0 && (
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-pink-500 rounded-full animate-pulse border border-slate-900"></span>
+          )}
+        </button>
+        <button
+          onClick={() => setCurrentView('preview')}
+          className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+            currentView === 'preview' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <span className="text-xl">👤</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider">Card</span>
+        </button>
+        <button
+          onClick={() => setCurrentView('chat')}
+          className={`relative flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+            currentView === 'chat' ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <span className="text-xl">💬</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider">Chat</span>
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+        </button>
+      </nav>
+
     </div>
   );
 }
