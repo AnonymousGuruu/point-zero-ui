@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { db } from '@/lib/firebase'; // Ensure this points to your firebase config
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 
 interface Artist {
   id: string;
@@ -21,6 +23,9 @@ const ARTISTS_DATA: Artist[] = [
 export default function ArtistsDirectory() {
   const [filter, setFilter] = useState<string>('All');
   const [allArtists, setAllArtists] = useState<Artist[]>([]);
+  
+  // New state to hold the live media files
+  const [mediaVault, setMediaVault] = useState<any[]>([]);
 
   useEffect(() => {
     const storedStr = localStorage.getItem('pz_registered_artists');
@@ -30,6 +35,22 @@ export default function ArtistsDirectory() {
     } else {
       setAllArtists(ARTISTS_DATA);
     }
+  }, []);
+
+  // Firebase Media Sync Listener
+  useEffect(() => {
+    // Order by timestamp descending so the newest uploads show first
+    const q = query(collection(db, "artistMedia"), orderBy("timestamp", "desc"));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMedia = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setMediaVault(fetchedMedia);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const filteredArtists = filter === 'All' 
@@ -143,8 +164,9 @@ export default function ArtistsDirectory() {
 
             {/* Layout grids displaying photos/blocks */}
             <div className="grid grid-cols-2 gap-3">
+              {/* 1. We still show uploaded profile photos if they exist in localStorage */}
               {allArtists.filter(a => a.image && a.image.startsWith('data:image')).map((artist, idx) => (
-                <div key={idx} className="group relative aspect-square rounded-2xl overflow-hidden border border-slate-900 bg-slate-950 shadow-md">
+                <div key={`profile-img-${idx}`} className="group relative aspect-square rounded-2xl overflow-hidden border border-slate-900 bg-slate-950 shadow-md">
                   <img src={artist.image} alt="Vault capture content" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end p-3">
                     <p className="text-[10px] font-black text-emerald-400 uppercase tracking-wider truncate w-full">{artist.name}</p>
@@ -152,16 +174,31 @@ export default function ArtistsDirectory() {
                 </div>
               ))}
               
-              {/* Wireframe asset placeholders for missing media slots */}
-              {[
-                { label: 'Live_Set.jpg', icon: '📸' },
-                { label: 'Studio_Cut.mp4', icon: '🎥' }
-              ].map((placeholder, i) => (
-                <div key={i} className="aspect-square rounded-2xl bg-slate-950/80 border border-slate-900/60 flex flex-col items-center justify-center text-center p-3 text-slate-700 font-mono text-[10px] group hover:border-slate-800 transition-colors duration-300">
-                  <span className="text-xl opacity-40 group-hover:scale-110 transition-transform">{placeholder.icon}</span>
-                  <p className="mt-2 font-medium text-slate-500">{placeholder.label}</p>
-                </div>
-              ))}
+              {/* 2. Map through live Firestore media! */}
+              {mediaVault.length > 0 ? (
+                mediaVault.map((media) => (
+                  <div key={media.id} className="aspect-square rounded-2xl bg-slate-950/80 border border-slate-900/60 flex flex-col items-center justify-center text-center p-3 text-slate-700 font-mono text-[10px] group hover:border-emerald-500/50 hover:bg-slate-900 transition-all duration-300 relative overflow-hidden">
+                    <span className="text-2xl mb-2 opacity-50 group-hover:scale-110 transition-transform">
+                      {media.type === 'Video' ? '🎥' : '📸'}
+                    </span>
+                    <p className="mt-1 font-bold text-slate-300 truncate w-full px-1">{media.name}</p>
+                    <p className="mt-1 text-emerald-500/70 text-[8px] uppercase tracking-widest font-bold">
+                      {media.artistName || 'Artist'}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                /* 3. Fallback Wireframes if no media is live yet */
+                [
+                  { label: 'Live_Set.jpg', icon: '📸' },
+                  { label: 'Studio_Cut.mp4', icon: '🎥' }
+                ].map((placeholder, i) => (
+                  <div key={`placeholder-${i}`} className="aspect-square rounded-2xl bg-slate-950/80 border border-slate-900/60 flex flex-col items-center justify-center text-center p-3 text-slate-700 font-mono text-[10px] group hover:border-slate-800 transition-colors duration-300">
+                    <span className="text-xl opacity-40 group-hover:scale-110 transition-transform">{placeholder.icon}</span>
+                    <p className="mt-2 font-medium text-slate-500">{placeholder.label}</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

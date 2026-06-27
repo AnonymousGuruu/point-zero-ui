@@ -23,10 +23,9 @@ export default function ArtistDashboard() {
   const [artistName, setArtistName] = useState('Creative');
   const [artistAvatar, setArtistAvatar] = useState<string | null>(null);
   
-  const [mediaFiles, setMediaFiles] = useState([
-    { id: 1, name: 'Live_Acoustic_Set.mp4', type: 'Video', size: '42.5 MB', date: '2026-05-20' },
-    { id: 2, name: 'Studio_Profile_Main.jpg', type: 'Image', size: '2.4 MB', date: '2026-05-22' },
-  ]);
+  // Updated: Changed to empty array to load from Firebase
+  const [mediaFiles, setMediaFiles] = useState<any[]>([]);
+  
   const [uploading, setUploading] = useState(false);
   const [liveOffers, setLiveOffers] = useState<any[]>([]);
 
@@ -76,6 +75,31 @@ export default function ArtistDashboard() {
 
     return () => unsubscribe();
   }, [artistName]);
+
+  // Firebase Media Sync
+  useEffect(() => {
+    // Order by timestamp descending so newest files show up at the top
+    const q = query(collection(db, "artistMedia"), orderBy("timestamp", "desc"));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMedia = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          type: data.type,
+          size: data.size,
+          // Format the Firestore timestamp into a clean date string
+          date: data.timestamp?.toDate 
+            ? data.timestamp.toDate().toISOString().split('T')[0] 
+            : new Date().toISOString().split('T')[0]
+        };
+      });
+      setMediaFiles(fetchedMedia);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Smooth scroll pinning mechanism for incoming message structures
   useEffect(() => {
@@ -207,31 +231,31 @@ export default function ArtistDashboard() {
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
-  const simulateUpload = (e: React.FormEvent) => {
+  // Updated: Now pushes file metadata to Firestore
+  const simulateUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile.current) return;
 
     setUploading(true);
     
-    setTimeout(() => {
-      if (!selectedFile.current) return;
+    try {
       const isVideo = selectedFile.current.type.startsWith('video/');
       
-      setMediaFiles(prev => [
-        {
-          id: Date.now(),
-          name: selectedFile.current!.name,
-          type: isVideo ? 'Video' : 'Image',
-          size: formatBytes(selectedFile.current!.size),
-          date: new Date().toISOString().split('T')[0]
-        },
-        ...prev
-      ]);
+      await addDoc(collection(db, "artistMedia"), {
+        name: selectedFile.current.name,
+        type: isVideo ? 'Video' : 'Image',
+        size: formatBytes(selectedFile.current.size),
+        artistName: artistName,
+        timestamp: serverTimestamp(),
+      });
       
       setUploading(false);
       selectedFile.current = null;
       if (fileInputRef.current) fileInputRef.current.value = '';
-    }, 1500);
+    } catch (error) {
+      console.error("Error saving media to database: ", error);
+      setUploading(false);
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {

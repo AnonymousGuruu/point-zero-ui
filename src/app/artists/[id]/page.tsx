@@ -1,12 +1,15 @@
-'use client';
+ 'use client';
 
 import React, { useState } from 'react';
+import { db } from '@/lib/firebase'; 
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function ArtistProfilePage() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookingDate, setBookingDate] = useState('');
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleBookingTrigger = () => {
     const activeSession = sessionStorage.getItem('pz_active_session');
@@ -22,25 +25,32 @@ export default function ArtistProfilePage() {
     setBookingConfirmed(false);
   };
 
-  const submitBooking = (e: React.FormEvent) => {
+  const submitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBookingConfirmed(true);
+    setIsSubmitting(true);
     
-    // Dispatch a virtual pipeline notice to populate the global account state databases
     const activeSession = JSON.parse(sessionStorage.getItem('pz_active_session') || '{}');
-    const targetDeal = {
-      id: `DEAL-${Math.floor(100 + Math.random() * 900)}`,
-      artist: 'Kendi Nicole',
-      client: activeSession.name || 'External Client Node',
-      date: bookingDate,
-      notes: notes,
-      status: 'Pending Review',
-      budget: 'Ksh 85,000'
-    };
 
-    // Push into a global shared state channel queue
-    const currentQueue = JSON.parse(localStorage.getItem('pz_global_booking_queue') || '[]');
-    localStorage.setItem('pz_global_booking_queue', JSON.stringify([targetDeal, ...currentQueue]));
+    try {
+      // PUSH DIRECTLY TO FIRESTORE PIPELINE
+      await addDoc(collection(db, "bookings"), {
+        id: `DEAL-${Math.floor(100 + Math.random() * 900)}`,
+        artist: 'Kendi Nicole',
+        client: activeSession.name || 'External Client Node',
+        date: bookingDate,
+        notes: notes,
+        status: 'Pending Review',
+        budget: 'Ksh 85,000',
+        createdAt: serverTimestamp()
+      });
+
+      setBookingConfirmed(true);
+    } catch (error) {
+      console.error("Pipeline Sync Error:", error);
+      alert("Failed to reach the Secure Node. Please check your connection.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -103,7 +113,7 @@ export default function ArtistProfilePage() {
           </div>
         </section>
 
-        {/* SIDE TERMS PANEL PANEL */}
+        {/* SIDE TERMS PANEL */}
         <section className="space-y-6">
           <div className="bg-slate-900/30 border border-slate-900 p-6 rounded-3xl backdrop-blur-sm">
             <h4 className="text-xs font-black text-white uppercase tracking-widest font-mono mb-5 pb-3 border-b border-slate-900">Engagement Parameters</h4>
@@ -170,9 +180,10 @@ export default function ArtistProfilePage() {
                 
                 <button 
                   type="submit" 
-                  className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-500/5 active:scale-95"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-500/5 active:scale-95"
                 >
-                  Submit Ingestion Pipeline
+                  {isSubmitting ? 'Dispatching...' : 'Submit Ingestion Pipeline'}
                 </button>
               </form>
             ) : (
